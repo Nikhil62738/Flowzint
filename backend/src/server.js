@@ -15,14 +15,20 @@ import { registerSocket } from "./socket/index.js";
 
 const app = express();
 const server = http.createServer(app);
+const allowedPreviewHosts = [/^https:\/\/[a-z0-9-]+\.netlify\.app$/i];
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || env.clientUrls.includes(origin)) return callback(null, true);
+    const normalizedOrigin = origin?.replace(/\/+$/, "");
+    if (!normalizedOrigin || env.clientUrls.includes(normalizedOrigin)) return callback(null, true);
+    if (allowedPreviewHosts.some((pattern) => pattern.test(normalizedOrigin))) return callback(null, true);
     if (env.nodeEnv !== "production" && /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(origin)) {
       return callback(null, true);
     }
+    console.warn(`CORS blocked origin: ${origin}. Allowed: ${env.clientUrls.join(", ")}`);
     return callback(new Error(`CORS blocked origin: ${origin}`));
   },
+  methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 };
 const io = new Server(server, {
@@ -31,6 +37,7 @@ const io = new Server(server, {
 
 app.use(helmet());
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json({ limit: "1mb" }));
 app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
 app.use(rateLimit({ windowMs: 60_000, max: 120 }));
