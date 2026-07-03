@@ -1,0 +1,15 @@
+{
+  "name": "emotion-aware-care-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-stack AI customer care assistant with emotion-aware adaptive responses.",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
+    "start:backend": "npm start --prefix backend",
+    "start:frontend": "npm start --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
